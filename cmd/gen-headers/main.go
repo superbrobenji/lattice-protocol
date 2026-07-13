@@ -212,7 +212,9 @@ message MeshMessage {
 		}
 		parts := strings.Split(tag, ",")
 		num := 0
-		fmt.Sscanf(parts[0], "%d", &num)
+		if _, err := fmt.Sscanf(parts[0], "%d", &num); err != nil || num == 0 {
+			continue
+		}
 		protoType := parts[1]
 		optional := false
 		for _, p := range parts[2:] {
