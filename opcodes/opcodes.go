@@ -11,6 +11,9 @@ const (
 	OpHealthReport = byte(0xB1) // Node (serial) → server: health status; payload: [B1][1B adapterType][6B mac][4B uptimeSec LE]
 	OpNodeHealth   = byte(0xB2) // Node (non-serial) → server via serial adapter; payload: [B2][1B adapterType][6B mac][4B uptimeSec LE]
 
+	// Node → server: route reporting
+	OpRouteReport  = byte(0xB3) // Node→server: routing path; payload: [B3][1B path_len][path_len × 6B MACs]
+
 	// Server → node: management
 	OpNodeIdSet  = byte(0xC0) // Server → node: assign logical node ID
 	OpConfigSet  = byte(0xC1) // Server → node: set adapter type and config; payload: [C1][6B targetMac][1B adapterType]
