@@ -11,6 +11,9 @@
 #define OP_HEALTH_REPORT     0xB1  /* node(serial)→server: [B1][1B type][6B mac][4B uptime_le] */
 #define OP_NODE_HEALTH       0xB2  /* node(non-serial)→server: [B2][1B type][6B mac][4B uptime_le] */
 
+/* Node → server: route reporting */
+#define OP_ROUTE_REPORT      0xB3  /* routing path: [B3][1B path_len][path_len × 6B MACs] */
+
 /* Server → node: management */
 #define OP_NODE_ID_SET       0xC0  /* assign logical node ID */
 #define OP_CONFIG_SET        0xC1  /* set adapter type; payload: [C1][6B targetMac][1B adapterType] */
