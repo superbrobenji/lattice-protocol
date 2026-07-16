@@ -19,6 +19,11 @@ typedef struct __attribute__((packed)) {
     uint32_t         epoch_num;
     uint16_t         seq_num;
     uint8_t          enrollment_public_key[32];
+    uint8_t          route_len;
+    uint8_t          route_path[60];
+    uint8_t          auth_tag[16];
+    uint8_t          secondary_master_mac[6];
+    uint8_t          secondary_public_key[32];
 } mesh_message;
 
-static_assert(sizeof(mesh_message) == 127, "mesh_message size changed — update server proto");
+static_assert(sizeof(mesh_message) == 242, "mesh_message size changed — update server proto");
