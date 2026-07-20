@@ -15,4 +15,9 @@ message MeshMessage {
   uint32 seqNum = 9;
   uint32 protoVersion = 10;
   optional bytes public_key = 11;
+  optional uint32 routeLen = 12;
+  optional bytes routePath = 13;
+  optional bytes authTag = 14;
+  optional bytes secondaryMasterMac = 15;
+  optional bytes secondaryPublicKey = 16;
 }
