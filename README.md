@@ -57,6 +57,9 @@ This module follows semver. Consumers pin to a tag.
 
 | Tag | Notes |
 |-----|-------|
+| v0.4.2 | gen-headers emit textual include guards (`LATTICE_<FILE>_H`) on all `c/*.h`; wire format unchanged |
+| v0.4.1 | nanopb `max_size` options for proto v3 fields (`routePath`, `authTag`, secondary master) |
+| v0.4.0 | Protocol v3 wire format: source-routed downlink (`RoutePath[60]` + `RouteLen`), E2E AEAD auth tag (`AuthTag[16]`), dual-master JOIN_ACK fields (`SecondaryMasterMac`, `SecondaryPublicKey[32]`); `WireSize = 242` |
 | v0.3.0 | Add health opcodes 0xB0/0xB1/0xB2 |
 | v0.2.1 | Lower go directive to 1.21.0 |
 | v0.2.0 | Generated C headers; submodule support |
