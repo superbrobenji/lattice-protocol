@@ -20,4 +20,5 @@ message MeshMessage {
   optional bytes authTag = 14;
   optional bytes secondaryMasterMac = 15;
   optional bytes secondaryPublicKey = 16;
+  optional bytes authPath = 17;
 }
