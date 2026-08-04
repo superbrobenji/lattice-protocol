@@ -3,7 +3,7 @@
 // Run "go generate ./..." to regenerate c/mesh_message.h and proto/mesh.proto.
 package message
 
-// MeshMessage is the 242-byte packed wire-format frame for the Lattice mesh (protocol v3).
+// MeshMessage is the 250-byte packed wire-format frame for the Lattice mesh (protocol v4).
 // Field order matches the packed C struct — do not reorder without updating the static_assert.
 // v3 additions (route_len..secondary_public_key) append after enrollment_public_key so the
 // 127-byte v2 prefix layout is unchanged.
@@ -27,8 +27,10 @@ type MeshMessage struct {
 	// v3: dual-master provisioning in JOIN_ACK (Phase 4). Zero elsewhere.
 	SecondaryMasterMac  [6]byte  `c:"uint8_t[6]"  proto:"15,bytes,optional"`
 	SecondaryPublicKey  [32]byte `c:"uint8_t[32]" proto:"16,bytes,optional"`
+	// v4: chained HMAC-SHA256-64 over the relay-accumulated route_path (Phase C, issue #44).
+	AuthPath [8]byte `c:"uint8_t[8]" proto:"17,bytes,optional,authPath"`
 }
 
 // WireSize is the expected packed byte size — enforced by static_assert in the generated C header.
-// 127 (v2 prefix) + 1 + 60 + 16 + 6 + 32 = 242. Must stay ≤ 250 (ESP-NOW frame limit).
-const WireSize = 242
+// 127 (v2 prefix) + 1 + 60 + 16 + 6 + 32 + 8 = 250. Must stay ≤ 250 (ESP-NOW frame limit).
+const WireSize = 250
