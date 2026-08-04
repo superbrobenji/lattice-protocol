@@ -25,8 +25,8 @@ type MeshMessage struct {
 	// v3: ChaCha20-Poly1305 tag over data[64] (E2E AEAD).
 	AuthTag [16]byte `c:"uint8_t[16]" proto:"14,bytes,optional"`
 	// v3: dual-master provisioning in JOIN_ACK (Phase 4). Zero elsewhere.
-	SecondaryMasterMac  [6]byte  `c:"uint8_t[6]"  proto:"15,bytes,optional"`
-	SecondaryPublicKey  [32]byte `c:"uint8_t[32]" proto:"16,bytes,optional"`
+	SecondaryMasterMac [6]byte  `c:"uint8_t[6]"  proto:"15,bytes,optional"`
+	SecondaryPublicKey [32]byte `c:"uint8_t[32]" proto:"16,bytes,optional"`
 	// v4: chained HMAC-SHA256-64 over the relay-accumulated route_path (Phase C, issue #44).
 	AuthPath [8]byte `c:"uint8_t[8]" proto:"17,bytes,optional,authPath"`
 }
