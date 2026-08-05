@@ -57,6 +57,7 @@ This module follows semver. Consumers pin to a tag.
 
 | Tag | Notes |
 |-----|-------|
+| v0.6.0 | Wire shrink 250→200B: dropped top-level Secondary{MasterMac,PublicKey} (moved to JOIN_ACK data payload); `RoutePath[60→48]` (`MAX_HOPS` 10→8). Flag-day, no v5 backcompat. |
 | v0.5.0 | Protocol v4 wire: AuthPath[8] — chained HMAC-SHA256-64 authenticating relay-accumulated route_path (issue lattice-nodes#44). Flag-day, no backcompat. WireSize=250. |
 | v0.4.2 | gen-headers emit textual include guards (`LATTICE_<FILE>_H`) on all `c/*.h`; wire format unchanged |
 | v0.4.1 | nanopb `max_size` options for proto v3 fields (`routePath`, `authTag`, secondary master) |

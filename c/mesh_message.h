@@ -23,13 +23,11 @@ typedef struct __attribute__((packed)) {
     uint16_t         seq_num;
     uint8_t          enrollment_public_key[32];
     uint8_t          route_len;
-    uint8_t          route_path[60];
+    uint8_t          route_path[48];
     uint8_t          auth_tag[16];
-    uint8_t          secondary_master_mac[6];
-    uint8_t          secondary_public_key[32];
     uint8_t          auth_path[8];
 } mesh_message;
 
-static_assert(sizeof(mesh_message) == 250, "mesh_message size changed — update server proto");
+static_assert(sizeof(mesh_message) == 200, "mesh_message size changed — update server proto");
 
 #endif /* LATTICE_MESH_MESSAGE_H */
