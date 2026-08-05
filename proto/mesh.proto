@@ -18,7 +18,5 @@ message MeshMessage {
   optional uint32 routeLen = 12;
   optional bytes routePath = 13;
   optional bytes authTag = 14;
-  optional bytes secondaryMasterMac = 15;
-  optional bytes secondaryPublicKey = 16;
   optional bytes authPath = 17;
 }
