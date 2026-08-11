@@ -43,7 +43,8 @@ constants — not whatever is newest on `lattice-protocol`'s `main` branch.
 ### `lattice-hub`: Go module
 
 `lattice-hub` imports this repo as an ordinary Go module dependency. Its
-`server/orchestrator/go.mod` (and `server/sidecar/go.mod`) declare:
+`server/orchestrator/go.mod` declares (the sibling `server/sidecar/go.mod` module does not depend
+on `lattice-protocol` — it has no mesh wire-format code):
 
 ```
 require github.com/superbrobenji/lattice-protocol v0.6.0
@@ -94,7 +95,7 @@ its own history — treat it as an observation, not a documented decision.
 
 ### If you maintain `lattice-hub`
 
-1. Bump the `require github.com/superbrobenji/lattice-protocol` line in `server/orchestrator/go.mod` (and `server/sidecar/go.mod`) to the new tag, then run `go mod tidy`.
+1. Bump the `require github.com/superbrobenji/lattice-protocol` line in `server/orchestrator/go.mod` to the new tag, then run `go mod tidy`. (`server/sidecar/go.mod` does not import this repo, so it needs no change.)
 2. Rebuild (`go build ./...`) — a breaking Go-level API change in the new tag (renamed/removed constants, changed struct fields) will fail the build immediately; a wire-format-only change (new `ProtoVersion`) will build cleanly but change what the server accepts at runtime.
 3. If the tag is a flag-day release, update the hardcoded protocol-version check (e.g. `server/orchestrator/mesh/server.go`'s `if msg.ProtoVersion != 5`) to the new value before deploying.
 4. Deploy the new hub build. The same flag-day caveat applies from the server side: any node still running old firmware in the field will have its messages dropped by the `ProtoVersion` check until it is reflashed — the hub bump and the node reflash need to be coordinated, not independently scheduled.
