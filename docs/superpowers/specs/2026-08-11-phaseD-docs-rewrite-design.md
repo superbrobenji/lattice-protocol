@@ -42,7 +42,7 @@ Go/codegen fluency in every reader: one for someone who just consumes a release 
 version, zero interest in codegen internals), one for someone making a protocol change who isn't
 fluent in this repo's specific codegen mechanism.
 
-## Scope — 12 documents (5 fixes + 7 new)
+## Scope — 9 documents (3 fixes + 6 new)
 
 | Doc | Action | Key content |
 |---|---|---|

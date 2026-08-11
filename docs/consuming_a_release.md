@@ -158,9 +158,12 @@ up.
 ### Step 3: Read the changelog before you assume anything
 
 Before touching code, read the target version's entry in this repo's own
-[README versioning table](../README.md#versioning). Every entry states whether the release is wire-format-breaking ("flag-day, no backcompat") or
-additive, and summarizes what changed — e.g. renamed/removed constants, resized struct fields, new
-opcodes. This tells you what kind of failure (if any) to expect in Step 4, and whether you'll also
+[README versioning table](../README.md#versioning). Some entries are explicitly annotated
+"Flag-day, no backcompat" (currently only `v0.5.0` and `v0.6.0`); others are wire-breaking without
+carrying that label (e.g. `v0.4.0`, which changed `WireSize` to 242) or are purely additive. Don't
+rely on the label alone — read the described changes in the row itself, e.g. renamed/removed
+constants, resized struct fields, new opcodes, to determine whether the release is wire-breaking.
+This tells you what kind of failure (if any) to expect in Step 4, and whether you'll also
 need to update a hardcoded protocol-version check on the hub side (see
 [`docs/ecosystem.md`](ecosystem.md#policy-flag-day-releases-no-backcompat) for the flag-day
 mechanism — `lattice-hub`'s `server/orchestrator/mesh/server.go` does the equivalent check to

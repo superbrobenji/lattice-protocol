@@ -12,7 +12,7 @@ only tell you which steps to take and why each one matters.
 | You want to... | Edit |
 |---|---|
 | Add or change a field on the wire frame itself (the bytes sent over ESP-NOW) | `message/message.go` (the `MeshMessage` struct) |
-| Add a new serial command byte (byte 0 of a `MessageTypeSerialCmdBroadcast` payload — server↔node commands and acks) | `opcodes/opcodes.go` |
+| Add a new serial command byte (byte 0 of a `MeshTypeSerialCmdBroadcast` payload — server↔node commands and acks) | `opcodes/opcodes.go` |
 | Add a new adapter/sensor category (e.g. a new sensor type) | `adapter/types.go` |
 
 There's a fourth, rarer case: a new *frame-level* message type (as opposed to adapter payload

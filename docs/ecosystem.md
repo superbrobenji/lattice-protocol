@@ -64,10 +64,14 @@ period is provided. A node or server built against the old protocol version and 
 the new version cannot successfully exchange mesh messages after the cutover — there is no
 negotiation, no version range, no shim.
 
-This is already the repo's practice — every wire-breaking release in the `README.md` versioning
-table is annotated "Flag-day, no backcompat" (see the `v0.5.0` and `v0.6.0` entries, and the
-commit messages that introduced them), but until now it has only existed as changelog prose. This
-document states it as policy: **any change to `ProtoVersion` is a flag day.**
+This is already the repo's practice, though the `README.md` versioning table only labels it
+consistently for recent rows: the `v0.5.0` and `v0.6.0` entries are explicitly annotated
+"Flag-day, no backcompat" (matching the commit messages that introduced them), but earlier
+wire-breaking releases — e.g. `v0.4.0`, which changed `WireSize` to 242 — carry no such label, and
+most rows in the table have neither a wire-format change nor an annotation. The label is not a
+reliable signal on its own; check the `WireSize`/field changes described in each row to determine
+whether a given release is wire-breaking. This document states the underlying policy explicitly
+for the first time: **any change to `ProtoVersion` is a flag day**, labelled or not.
 
 The mechanism is enforced independently in both consumers, not by this repo: `lattice-nodes`
 defines `PROTO_VERSION` as a `constexpr` in `firmware/main/src/mesh/MeshMessenger.h` and
