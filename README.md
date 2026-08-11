@@ -6,8 +6,12 @@
 Shared protocol definitions for the Lattice mesh network. Defines the opcode and adapter-type constants consumed by all Lattice services and firmware.
 
 Used by:
-- **motionSensorServer** (Go) — imports as a Go module
-- **Lattice-nodes** (ESP32/C++) — includes via git submodule
+- **lattice-hub** (Go) — imports as a Go module
+- **lattice-nodes** (ESP32/C++) — includes via git submodule
+
+## Ecosystem
+
+`lattice-protocol` is the shared wire-format source of truth for the Lattice mesh: the opcode and adapter-type constants and the `MeshMessage` frame layout are defined here and generated out to consumers. `lattice-nodes` (ESP32 firmware) vendors the generated `c/` headers as a git submodule. `lattice-hub` (the mesh server) imports this repo as a Go module via `go.mod`. See the [ecosystem doc](docs/ecosystem.md) for the full picture of how the three repos fit together.
 
 ## Packages
 
@@ -15,12 +19,14 @@ Used by:
 |---------|-------------|
 | `opcodes/` | Serial command opcode constants (Go) |
 | `adapter/` | Adapter type identifiers and helpers (Go) |
+| `message/` | `MeshMessage` wire-format struct (the 200-byte packed protocol frame) and message-type constants (Go) |
 | `c/` | Generated C headers for firmware — do not edit directly |
-| `cmd/gen-headers/` | Generator that writes `c/` from the Go constants |
+| `proto/` | Generated `mesh.proto` plus hand-maintained `mesh.options` nanopb sizing file |
+| `cmd/gen-headers/` | Generator that writes `c/*.h` and `proto/mesh.proto` from the Go constants |
 
 ## Usage
 
-### Go (motionSensorServer)
+### Go (lattice-hub)
 
 ```go
 import (
@@ -32,7 +38,7 @@ payload[0] = opcodes.OpLEDSolid
 if adapter.IsOutput(node.AdapterType) { ... }
 ```
 
-### C (Lattice-nodes — via git submodule at `main/lib/lattice-protocol`)
+### C (lattice-nodes — via git submodule at `firmware/main/lib/lattice-protocol`)
 
 ```c
 #include "lib/lattice-protocol/c/opcodes.h"
