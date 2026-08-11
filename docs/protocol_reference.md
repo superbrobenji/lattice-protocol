@@ -14,7 +14,7 @@ from prose elsewhere. If this doc and the source ever disagree, the source wins;
 C headers are generated from the Go constants via `go generate ./...` (see `cmd/gen-headers`); the
 Go files are always the ones to edit.
 
-Verified against commit `3981770` (2026-08-11).
+Verified against the `v0.6.0` release tag (commit `99cd30c`).
 
 ## Message types
 
@@ -129,5 +129,7 @@ fields (offsets 0–126) are unchanged by the v3/v4 additions, which is why v3 c
 fields without breaking the layout of any field that existed before it.
 
 Note the `proto` field numbers (10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 17) are not
-sequential in wire order and skip 15 and 16 — this is transcribed as-is from `message/message.go`;
-consult `proto/mesh.proto` if you need to know why those numbers are reserved/skipped.
+sequential in wire order and skip 15 and 16 — this is transcribed as-is from `message/message.go`.
+Fields 15 and 16 were `SecondaryMasterMac` and `SecondaryPublicKey`, removed in the `v0.6.0` wire
+shrink; proto field numbers are never reused, so they remain permanently retired. See
+[`docs/making_a_protocol_change.md`](making_a_protocol_change.md) for the full explanation.

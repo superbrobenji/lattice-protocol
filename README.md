@@ -24,6 +24,8 @@ Used by:
 | `proto/` | Generated `mesh.proto` plus hand-maintained `mesh.options` nanopb sizing file |
 | `cmd/gen-headers/` | Generator that writes `c/*.h` and `proto/mesh.proto` from the Go constants |
 
+See [`docs/protocol_reference.md`](docs/protocol_reference.md) for a consolidated reference of every message type, opcode, adapter type, and the `MeshMessage` wire layout.
+
 ## Usage
 
 ### Go (lattice-hub)
