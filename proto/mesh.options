@@ -3,7 +3,5 @@ mesh.MeshMessage.targetMacAddress  max_size:6  fixed_length:true
 mesh.MeshMessage.lastHopMacAddress max_size:6  fixed_length:true
 mesh.MeshMessage.data              max_size:64
 mesh.MeshMessage.public_key        max_size:32
-mesh.MeshMessage.routePath          max_size:60
+mesh.MeshMessage.routePath          max_size:48
 mesh.MeshMessage.authTag            max_size:16
-mesh.MeshMessage.secondaryMasterMac max_size:6
-mesh.MeshMessage.secondaryPublicKey max_size:32
