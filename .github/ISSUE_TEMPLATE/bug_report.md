@@ -23,5 +23,5 @@ assignees: ''
 ## Environment
 
 - Go version:
-- Consumer repo: motionSensorServer / Lattice-nodes / other
+- Consumer repo: lattice-hub / lattice-nodes / other
 - Protocol version (tag):

@@ -6,8 +6,12 @@
 Shared protocol definitions for the Lattice mesh network. Defines the opcode and adapter-type constants consumed by all Lattice services and firmware.
 
 Used by:
-- **motionSensorServer** (Go) — imports as a Go module
-- **Lattice-nodes** (ESP32/C++) — includes via git submodule
+- **lattice-hub** (Go) — imports as a Go module
+- **lattice-nodes** (ESP32/C++) — includes via git submodule
+
+## Ecosystem
+
+`lattice-protocol` is the shared wire-format source of truth for the Lattice mesh: the opcode and adapter-type constants and the `MeshMessage` frame layout are defined here and generated out to consumers. `lattice-nodes` (ESP32 firmware) vendors the generated `c/` headers as a git submodule. `lattice-hub` (the mesh server) imports this repo as a Go module via `go.mod`. See the [ecosystem doc](docs/ecosystem.md) for the full picture of how the three repos fit together.
 
 ## Packages
 
@@ -15,12 +19,16 @@ Used by:
 |---------|-------------|
 | `opcodes/` | Serial command opcode constants (Go) |
 | `adapter/` | Adapter type identifiers and helpers (Go) |
+| `message/` | `MeshMessage` wire-format struct (the 200-byte packed protocol frame) and message-type constants (Go) |
 | `c/` | Generated C headers for firmware — do not edit directly |
-| `cmd/gen-headers/` | Generator that writes `c/` from the Go constants |
+| `proto/` | Generated `mesh.proto` plus hand-maintained `mesh.options` nanopb sizing file |
+| `cmd/gen-headers/` | Generator that writes `c/*.h` and `proto/mesh.proto` from the Go constants |
+
+See [`docs/protocol_reference.md`](docs/protocol_reference.md) for a consolidated reference of every message type, opcode, adapter type, and the `MeshMessage` wire layout.
 
 ## Usage
 
-### Go (motionSensorServer)
+### Go (lattice-hub)
 
 ```go
 import (
@@ -32,7 +40,7 @@ payload[0] = opcodes.OpLEDSolid
 if adapter.IsOutput(node.AdapterType) { ... }
 ```
 
-### C (Lattice-nodes — via git submodule at `main/lib/lattice-protocol`)
+### C (lattice-nodes — via git submodule at `firmware/main/lib/lattice-protocol`)
 
 ```c
 #include "lib/lattice-protocol/c/opcodes.h"
@@ -57,6 +65,11 @@ This module follows semver. Consumers pin to a tag.
 
 | Tag | Notes |
 |-----|-------|
+| v0.6.0 | Wire shrink 250→200B: dropped top-level Secondary{MasterMac,PublicKey} (moved to JOIN_ACK data payload); `RoutePath[60→48]` (`MAX_HOPS` 10→8). Flag-day, no v5 backcompat. |
+| v0.5.0 | Protocol v4 wire: AuthPath[8] — chained HMAC-SHA256-64 authenticating relay-accumulated route_path (issue lattice-nodes#44). Flag-day, no backcompat. WireSize=250. |
+| v0.4.2 | gen-headers emit textual include guards (`LATTICE_<FILE>_H`) on all `c/*.h`; wire format unchanged |
+| v0.4.1 | nanopb `max_size` options for proto v3 fields (`routePath`, `authTag`, secondary master) |
+| v0.4.0 | Protocol v3 wire format: source-routed downlink (`RoutePath[60]` + `RouteLen`), E2E AEAD auth tag (`AuthTag[16]`), dual-master JOIN_ACK fields (`SecondaryMasterMac`, `SecondaryPublicKey[32]`); `WireSize = 242` |
 | v0.3.0 | Add health opcodes 0xB0/0xB1/0xB2 |
 | v0.2.1 | Lower go directive to 1.21.0 |
 | v0.2.0 | Generated C headers; submodule support |
