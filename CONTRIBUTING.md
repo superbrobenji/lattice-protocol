@@ -6,9 +6,11 @@ This repo contains shared protocol definitions for the Lattice mesh network:
 
 - **`opcodes/opcodes.go`** — serial command opcode constants (Go)
 - **`adapter/types.go`** — adapter type identifiers and helpers (Go)
+- **`message/`** — `MeshMessage` wire-format struct (the packed protocol frame) and message-type constants (Go)
 - **`c/`** — C headers generated from the Go constants; never edit these by hand
+- **`proto/`** — generated `mesh.proto` plus hand-maintained `mesh.options` nanopb sizing file
 
-Changes here affect all consumers: `lattice-hub` (imports as Go module) and `Lattice-nodes` (includes as git submodule). Treat every change as a protocol change.
+Changes here affect all consumers: `lattice-hub` (imports as Go module) and `lattice-nodes` (includes as git submodule). Treat every change as a protocol change.
 
 ## Prerequisites
 
@@ -17,22 +19,35 @@ Changes here affect all consumers: `lattice-hub` (imports as Go module) and `Lat
 
 ## Adding an opcode
 
-1. Edit `opcodes/opcodes.go`. Add your constant in the appropriate group, following the existing naming convention (`OpXxx` in Go, which becomes `OP_XXX` in the generated C header).
+Opcodes are **not** reflected into the C header automatically: `cmd/gen-headers/main.go` builds
+`c/opcodes.h` from a fixed list of hand-written `writeCDefByte(...)` calls in `writeOpcodesHeader`
+(one call per constant) — it does not scan `opcodes/opcodes.go`. Adding a new opcode means editing
+**both** files; skip the second one and `go generate` succeeds with no diff, silently leaving your
+new constant out of the generated header while `make check` still passes (see
+[`docs/making_a_protocol_change.md`](docs/making_a_protocol_change.md) for the full explanation).
+
+1. Edit `opcodes/opcodes.go`. Add your constant in the appropriate group, following the existing naming convention (`OpXxx` in Go, which becomes `OP_XXX` in the generated C header):
 
    ```go
    const (
-       OpYourNewOpcode Opcode = 0xXX
+       OpYourNewOpcode = byte(0xXX)
    )
    ```
 
-2. Regenerate C headers:
+2. Add a matching call in `cmd/gen-headers/main.go`'s `writeOpcodesHeader` function:
+
+   ```go
+   writeCDefByte(f, "OP_YOUR_NEW_OPCODE", opcodes.OpYourNewOpcode, "describe the payload/semantics")
+   ```
+
+3. Regenerate C headers:
 
    ```sh
    make generate
    # equivalent: go generate ./...
    ```
 
-3. Verify the headers are in sync with the Go constants:
+4. Verify the headers are in sync with the Go constants:
 
    ```sh
    make check
@@ -40,103 +55,49 @@ Changes here affect all consumers: `lattice-hub` (imports as Go module) and `Lat
    # Must exit 0 before you commit.
    ```
 
-4. Run tests:
+5. Run tests:
 
    ```sh
    go test ./...
    go vet ./...
    ```
 
-5. Commit Go source and generated `c/` files together in one commit:
+6. Commit the Go source, the generator change, and the regenerated `c/` file together in one commit:
 
    ```sh
-   git add opcodes/opcodes.go c/opcodes.h
+   git add opcodes/opcodes.go cmd/gen-headers/main.go c/opcodes.h
    git commit -m "feat(opcodes): add OpYourNewOpcode (0xXX)"
    ```
 
 ## Adding an adapter type
 
-Same flow as adding an opcode, but edit `adapter/types.go` instead and include `c/adapter_types.h` in the commit.
+Same flow as adding an opcode: edit `adapter/types.go`, add a matching `writeCDefInt32(...)` call in `cmd/gen-headers/main.go`'s `writeAdapterTypesHeader` function, regenerate, and include `c/adapter_types.h` in the commit.
 
 ## Changing the wire format
 
 The `MeshMessage` struct (`message/message.go`) is the packed frame sent over ESP-NOW between
-nodes and relayed to the master. It has more moving parts than an opcode change: one file you
-edit, two files that are generated from it, one hand-maintained file that isn't generated but
-still needs to match, and a cross-repo release step.
+nodes and relayed to the master. It's the highest-consequence change type in this repo: one file
+you edit, two files generated from it, one hand-maintained file that isn't generated but still
+needs to match by hand, and a cross-repo release-coordination step.
 
-1. Edit `message/message.go`. Add or change a field on `MeshMessage`, following the existing
-   struct-tag format:
+For the full mechanical walkthrough — struct-tag syntax, updating `WireSize`, regenerating
+`c/mesh_message.h` and `proto/mesh.proto`, and committing everything together — see
+[`docs/making_a_protocol_change.md`](docs/making_a_protocol_change.md). This section only covers
+the two decisions that are easy to get wrong:
 
-   ```go
-   YourField [N]byte `c:"uint8_t[N]" proto:"18,bytes,optional,yourFieldName"`
-   ```
+- **Most wire-format changes are flag-day, no-backcompat releases.** A `WireSize`/`ProtoVersion`
+  bump breaks compatibility with nodes/hubs still on the old version, with no dual-version support
+  period — see [`docs/ecosystem.md`](docs/ecosystem.md#policy-flag-day-releases-no-backcompat) for
+  what that means operationally for `lattice-nodes` and `lattice-hub`.
+- **`proto/mesh.options` is hand-maintained, and nothing checks it.** If the field you touched is
+  a `bytes` field whose size changed, you must manually add or update its `max_size:N` entry in
+  `proto/mesh.options`. `make check` only diffs *generated* files against the working tree, so a
+  stale or missing entry here will not fail CI no matter how out of sync it gets — treat every
+  `bytes` field size change as a reason to check this file by hand.
 
-   `c:"..."` drives the generated C field type; `proto:"fieldNum,protoType[,optional][,protoName]"`
-   drives the generated proto3 field. Field order in the struct is the wire order — do not
-   reorder existing fields. Proto field numbers are never reused; pick the next unused one.
-
-2. Update the `WireSize` constant and its doc comment to the new total packed size. `WireSize`
-   is not computed from the struct automatically — it's a hand-maintained constant, and the
-   generator bakes its current value into the C header's compile-time check (next step), so it
-   must be correct *before* you regenerate.
-
-3. Regenerate the C header and proto file:
-
-   ```sh
-   make generate
-   # equivalent: go generate ./...
-   ```
-
-   This rewrites `c/mesh_message.h` and `proto/mesh.proto` from `message/message.go`.
-
-4. `c/mesh_message.h` carries a compile-time size check:
-
-   ```c
-   static_assert(sizeof(mesh_message) == 200, "mesh_message size changed — update server proto");
-   ```
-
-   The `200` is whatever `WireSize` was when you last ran `go generate` — the generator writes
-   the literal, it doesn't compute it. If your struct change alters the packed size but you
-   didn't update `WireSize` first, this line will bake in the *old*, now-wrong number, and the
-   mismatch is only caught when a C compiler builds against this header — i.e. in the
-   `lattice-nodes` firmware build, not in this repo's own CI. This repo never compiles the C
-   headers itself; `header-sync` only runs `make check` (`go generate ./... && git diff
-   --exit-code c/ proto/`), which catches a header that's out of sync with the Go source, not a
-   `WireSize` that's internally wrong.
-
-5. If the field you touched is a `bytes` field whose size changed, manually update its entry in
-   `proto/mesh.options`:
-
-   ```
-   mesh.MeshMessage.yourFieldName max_size:N
-   ```
-
-   **This file is not generated, and nothing checks it.** Unlike `c/*.h` and `proto/mesh.proto`,
-   it carries no "Code generated ... DO NOT EDIT" banner — `go generate` never writes it. `make
-   check` diffs the *generated* files against the working tree; since `mesh.options` is never
-   part of what gets generated, there is nothing to diff it against, so a stale `max_size` here
-   will not fail CI no matter how out of sync it gets. This is a real, currently-unfixed gap in
-   the tooling, not a hypothetical one — treat every `bytes` field size change as a reason to
-   check this file by hand.
-
-6. Run tests:
-
-   ```sh
-   go test ./...
-   go vet ./...
-   ```
-
-7. Commit the Go source and every file you touched or regenerated together:
-
-   ```sh
-   git add message/message.go c/mesh_message.h proto/mesh.proto proto/mesh.options
-   git commit -m "feat(message): <describe the field change>"
-   ```
-
-8. Coordinate the release. A wire-format change is a hard dependency for `lattice-hub` and
-   `lattice-nodes` — see [`docs/release_process.md`](docs/release_process.md) for the actual
-   tagging and cross-repo update mechanics. This section only covers what to change here.
+Once your change, its generated files, and any `proto/mesh.options` update are committed and
+merged, coordinate the release — see [`docs/release_process.md`](docs/release_process.md) for the
+actual tagging and cross-repo update mechanics.
 
 ## Semver rules
 
